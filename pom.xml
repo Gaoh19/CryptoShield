@@ -11,4 +11,12 @@
         <maven.compiler.target>20</maven.compiler.target>
         <exec.mainClass>com.mycompany.cryptoshield.CryptoShield</exec.mainClass>
     </properties>
+    <dependencies>
+        <!-- JCE libraries for AES encryption -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>1.68</version>
+        </dependency>
+    </dependencies>
 </project>
