@@ -9,6 +9,8 @@
  */
 package com.mycompany.cryptoshield.encrypt;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -16,11 +18,17 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.SecureRandom;
+import java.security.Security;
 import java.util.Base64;
 import java.util.Properties;
+import java.util.Scanner;
 
 public class FileEncryption {
     public static void main(String[] args) throws Exception {
+        // Add the Bouncy Castle provider
+        Security.addProvider(new BouncyCastleProvider());
+
         Properties config = loadConfigProperties();
 
         String keyFilePath = config.getProperty("keyLocation");
@@ -28,19 +36,19 @@ public class FileEncryption {
 
         byte[] keyBytes = readKeyFromFile(keyFilePath);
 
-        if (keyBytes == null || keyBytes.length != 44) {
+        if (keyBytes == null || keyBytes.length != 32) {
             System.err.println("Error: The AES key is invalid.");
             System.exit(1);
         }
 
         SecretKey aesKey = new SecretKeySpec(keyBytes, "AES");
 
-        // Prompt for the encrypted file name
+        // Get the name for the encrypted file from the user
         String encryptedFileName = getInputForEncryptedFileName(inputFile);
 
         encryptFile(inputFile, encryptedFileName, aesKey);
 
-        System.out.println("Encryption completed. Encrypted file: " + encryptedFileName);
+        System.out.println("Encryption completed. Encrypted file stored in the same directory as the original file: " + encryptedFileName);
     }
 
     private static Properties loadConfigProperties() throws IOException {
@@ -52,20 +60,17 @@ public class FileEncryption {
     }
 
     private static String getInputForEncryptedFileName(String inputFile) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        System.out.print("Enter the name for the encrypted file (including .enc extension): ");
-        try {
-            String fileName = reader.readLine().trim();
-            if (!fileName.endsWith(".enc")) {
-                System.out.println("File name should end with .enc extension. Adding it automatically.");
-                fileName += ".enc";
-            }
-            return fileName;
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-            return null;
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter the name for the encrypted file: ");
+        String fileName = scanner.nextLine();
+        scanner.close();
+
+        // Ensure the file name ends with .enc extension
+        if (!fileName.endsWith(".enc")) {
+            fileName += ".enc";
         }
+
+        return fileName;
     }
 
     private static byte[] readKeyFromFile(String keyFilePath) {
@@ -80,7 +85,7 @@ public class FileEncryption {
 
     private static void encryptFile(String inputFile, String outputFile, SecretKey key) throws Exception {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        byte[] iv = generateRandomIV(); // Generate a random IV
+        byte[] iv = generateRandomIV();
 
         cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(iv));
 
@@ -108,8 +113,7 @@ public class FileEncryption {
 
     private static byte[] generateRandomIV() {
         byte[] iv = new byte[16]; // IV for AES/CBC mode should be 16 bytes long
-        new java.security.SecureRandom().nextBytes(iv);
+        new SecureRandom().nextBytes(iv);
         return iv;
     }
 }
-
