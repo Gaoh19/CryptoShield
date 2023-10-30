@@ -1,0 +1,2 @@
+encryptedFilePath : src/main/resources/files/encryptFiles/enc2.enc
+IVFilePath : src/main/resources/files/encryptFiles/enc2.enc.iv
